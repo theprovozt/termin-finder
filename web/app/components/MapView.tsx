@@ -13,14 +13,14 @@ interface Appointment {
   lat: number;
   lng: number;
   date: string | null;
-  slots: number;
+  slots_available: number;
   link: string;
 }
 
 interface MapViewProps {
   appointments: Appointment[];
   center: [number, number];
-  onMarkerClick: (appointment: Appointment) => void;
+  onMarkerClick: (appointment: Appointment | null) => void;
 }
 
 export default function MapView({ appointments, center, onMarkerClick }: MapViewProps) {
@@ -41,9 +41,29 @@ export default function MapView({ appointments, center, onMarkerClick }: MapView
 
     mapInstanceRef.current = map;
 
+    // Cleanup
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  // Update markers when appointments change
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    
+    const map = mapInstanceRef.current;
+    
+    // Clear existing markers
+    map.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        map.removeLayer(layer);
+      }
+    });
+
     // Add markers
     appointments.forEach((apt) => {
-      const markerColor = apt.slots > 5 ? "green" : apt.slots > 0 ? "yellow" : "red";
+      const markerColor = apt.slots_available > 5 ? "green" : apt.slots_available > 0 ? "yellow" : "red";
       
       const icon = L.divIcon({
         className: "custom-marker",
@@ -61,7 +81,7 @@ export default function MapView({ appointments, center, onMarkerClick }: MapView
             font-size: 10px;
             font-weight: bold;
             color: white;
-          ">${apt.slots}</div>
+          ">${apt.slots_available}</div>
         `,
         iconSize: [24, 24],
         iconAnchor: [12, 12],
@@ -74,8 +94,8 @@ export default function MapView({ appointments, center, onMarkerClick }: MapView
           <h3 style="font-weight: bold; margin-bottom: 8px;">${apt.title}</h3>
           <p style="color: #666; margin-bottom: 4px;">📍 ${apt.location}</p>
           <p style="color: #666; margin-bottom: 4px;">📅 ${apt.date ? new Date(apt.date).toLocaleDateString("de-DE") : "N/A"}</p>
-          <p style="color: ${apt.slots > 5 ? "green" : apt.slots > 0 ? "orange" : "red"}; font-weight: bold; margin-bottom: 8px;">
-            ${apt.slots} slots available
+          <p style="color: ${apt.slots_available > 5 ? "green" : apt.slots_available > 0 ? "orange" : "red"}; font-weight: bold; margin-bottom: 8px;">
+            ${apt.slots_available} slots available
           </p>
           <a href="${apt.link}" target="_blank" style="
             display: block;
@@ -92,13 +112,7 @@ export default function MapView({ appointments, center, onMarkerClick }: MapView
 
       marker.on("click", () => onMarkerClick(apt));
     });
-
-    // Cleanup
-    return () => {
-      map.remove();
-      mapInstanceRef.current = null;
-    };
-  }, [appointments, center, onMarkerClick]);
+  }, [appointments, onMarkerClick]);
 
   // Update view when center changes
   useEffect(() => {
