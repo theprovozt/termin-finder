@@ -12,13 +12,32 @@ from typing import List
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from scrapers.goethe import GoetheScraper
 from scrapers.telc import TelcScraper
+from scrapers.bamf import BamfScraper
 from models import Appointment
 
 
 async def run_all_scrapers() -> List[dict]:
     """Run all scrapers and aggregate results"""
     all_appointments = []
+    
+    # Run Goethe scraper
+    print("=" * 50)
+    print("Running Goethe scraper...")
+    print("=" * 50)
+    
+    goethe = GoetheScraper()
+    try:
+        results = await goethe.run()
+        for apt in results:
+            appointment_data = apt.to_dict()
+            appointment_data['date'] = appointment_data['date'].isoformat() if appointment_data.get('date') else None
+            appointment_data['last_updated'] = appointment_data['last_updated'].isoformat()
+            all_appointments.append(appointment_data)
+        print(f"Found {len(results)} Goethe appointments")
+    except Exception as e:
+        print(f"Goethe scraper error: {e}")
     
     # Run Telc scraper
     print("=" * 50)
@@ -37,10 +56,22 @@ async def run_all_scrapers() -> List[dict]:
     except Exception as e:
         print(f"Telc scraper error: {e}")
     
-    # Add more scrapers here as they're implemented:
-    # - GoetheScraper
-    # - BamfScraper
-    # - BurgeramtScraper
+    # Run BAMF scraper
+    print("=" * 50)
+    print("Running BAMF scraper...")
+    print("=" * 50)
+    
+    bamf = BamfScraper()
+    try:
+        results = await bamf.run()
+        for apt in results:
+            appointment_data = apt.to_dict()
+            appointment_data['date'] = appointment_data['date'].isoformat() if appointment_data.get('date') else None
+            appointment_data['last_updated'] = appointment_data['last_updated'].isoformat()
+            all_appointments.append(appointment_data)
+        print(f"Found {len(results)} BAMF appointments")
+    except Exception as e:
+        print(f"BAMF scraper error: {e}")
     
     return all_appointments
 
