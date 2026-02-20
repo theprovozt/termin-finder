@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { clsx } from "clsx";
 
@@ -14,109 +14,11 @@ interface Appointment {
   lat: number;
   lng: number;
   date: string | null;
-  slots: number;
+  slots_available: number;
+  total_slots?: number;
+  price?: number;
   link: string;
 }
-
-// Mock data with coordinates
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    source: "Goethe",
-    category: "language-exam",
-    title: "Goethe-Zertifikat B1",
-    location: "Berlin",
-    lat: 52.52,
-    lng: 13.405,
-    date: "2026-03-15",
-    slots: 5,
-    link: "https://goethe.de",
-  },
-  {
-    id: "2",
-    source: "Telc",
-    category: "language-exam",
-    title: "Telc B1 Deutschtest für Zuwanderer",
-    location: "München",
-    lat: 48.1351,
-    lng: 11.582,
-    date: "2026-03-20",
-    slots: 12,
-    link: "https://telc.net",
-  },
-  {
-    id: "3",
-    source: "BAMF",
-    category: "citizenship",
-    title: "Einbürgerungstest",
-    location: "Frankfurt",
-    lat: 50.1109,
-    lng: 8.6821,
-    date: "2026-04-01",
-    slots: 3,
-    link: "https://bamf.de",
-  },
-  {
-    id: "4",
-    source: "Goethe",
-    category: "language-exam",
-    title: "Goethe-Zertifikat A2",
-    location: "Hamburg",
-    lat: 53.5511,
-    lng: 9.9937,
-    date: "2026-03-10",
-    slots: 8,
-    link: "https://goethe.de",
-  },
-  {
-    id: "5",
-    source: "Telc",
-    category: "language-exam",
-    title: "Telc B2 Deutschtest",
-    location: "Köln",
-    lat: 50.9375,
-    lng: 6.9603,
-    date: "2026-03-25",
-    slots: 6,
-    link: "https://telc.net",
-  },
-  {
-    id: "6",
-    source: "Goethe",
-    category: "language-exam",
-    title: "Goethe-Zertifikat C1",
-    location: "Stuttgart",
-    lat: 48.7758,
-    lng: 9.1829,
-    date: "2026-03-18",
-    slots: 4,
-    link: "https://goethe.de",
-  },
-  {
-    id: "7",
-    source: "BAMF",
-    category: "citizenship",
-    title: "Einbürgerungstest",
-    location: "Düsseldorf",
-    lat: 51.2277,
-    lng: 6.7735,
-    date: "2026-04-05",
-    slots: 7,
-    link: "https://bamf.de",
-  },
-  {
-    id: "8",
-    source: "Telc",
-    category: "language-exam",
-    title: "Telc A2-B1 Schule",
-    location: "Dresden",
-    lat: 51.0504,
-    lng: 13.7373,
-    date: "2026-03-22",
-    slots: 10,
-    link: "https://telc.net",
-  },
-];
 
 const categories = [
   { id: "all", name: "All Appointments", icon: "📅" },
@@ -139,23 +41,43 @@ const locations = [
 ];
 
 // Dynamic import for map (client-side only)
-const MapView = dynamic(() => import("./components/MapView"), { 
+const MapView = dynamic(() => import("./components/MapView"), {
   ssr: false,
   loading: () => (
     <div className="h-full flex items-center justify-center bg-slate-100 rounded-xl">
       <p className="text-slate-500">Loading map...</p>
     </div>
-  )
+  ),
 });
 
 export default function Home() {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
-  const filteredAppointments = mockAppointments.filter((apt) => {
+  // Fetch appointments from API
+  useEffect(() => {
+    async function fetchAppointments() {
+      try {
+        const res = await fetch('/api/appointments');
+        const data = await res.json();
+        if (data.success) {
+          setAppointments(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch appointments:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAppointments();
+  }, []);
+
+  const filteredAppointments = appointments.filter((apt) => {
     const matchesSearch =
       apt.title.toLowerCase().includes(search.toLowerCase()) ||
       apt.location.toLowerCase().includes(search.toLowerCase()) ||
@@ -169,11 +91,22 @@ export default function Home() {
 
   const getCenter = () => {
     if (selectedLocation) {
-      const loc = locations.find(l => l.name === selectedLocation);
+      const loc = locations.find((l) => l.name === selectedLocation);
       if (loc) return [loc.lat, loc.lng] as [number, number];
     }
-    return [51.1657, 10.4515] as [number, number]; // Germany center
+    return [51.1657, 10.4515] as [number, number];
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading appointments...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -313,19 +246,19 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Map */}
             <div className="lg:col-span-2 h-[500px] rounded-xl overflow-hidden border border-slate-200">
-              <MapView 
+              <MapView
                 appointments={filteredAppointments}
                 center={getCenter()}
                 onMarkerClick={setSelectedAppointment}
               />
             </div>
-            
+
             {/* Sidebar List */}
             <div className="space-y-4 max-h-[500px] overflow-y-auto">
               {filteredAppointments.map((apt) => (
-                <AppointmentCard 
-                  key={apt.id} 
-                  appointment={apt} 
+                <AppointmentCard
+                  key={apt.id}
+                  appointment={apt}
                   isSelected={selectedAppointment?.id === apt.id}
                   onClick={() => setSelectedAppointment(apt)}
                 />
@@ -336,9 +269,9 @@ export default function Home() {
           /* List View */
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredAppointments.map((apt) => (
-              <AppointmentCard 
-                key={apt.id} 
-                appointment={apt} 
+              <AppointmentCard
+                key={apt.id}
+                appointment={apt}
                 onClick={() => setSelectedAppointment(apt)}
               />
             ))}
@@ -368,17 +301,17 @@ export default function Home() {
 }
 
 // Appointment Card Component
-function AppointmentCard({ 
-  appointment, 
+function AppointmentCard({
+  appointment,
   onClick,
-  isSelected 
-}: { 
-  appointment: Appointment; 
+  isSelected,
+}: {
+  appointment: Appointment;
   onClick?: () => void;
   isSelected?: boolean;
 }) {
   return (
-    <div 
+    <div
       onClick={onClick}
       className={`bg-white rounded-xl border p-5 hover:shadow-lg transition-all cursor-pointer ${
         isSelected ? "border-blue-500 ring-2 ring-blue-100" : "border-slate-200"
@@ -390,14 +323,14 @@ function AppointmentCard({
         </span>
         <span
           className={`text-xs font-semibold px-2 py-1 rounded ${
-            appointment.slots > 5
+            appointment.slots_available > 5
               ? "bg-green-100 text-green-700"
-              : appointment.slots > 0
+              : appointment.slots_available > 0
               ? "bg-yellow-100 text-yellow-700"
               : "bg-red-100 text-red-700"
           }`}
         >
-          {appointment.slots} slots
+          {appointment.slots_available} slots
         </span>
       </div>
 
@@ -414,15 +347,22 @@ function AppointmentCard({
         )}
       </div>
 
-      <a
-        href={appointment.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors"
-      >
-        Book Now →
-      </a>
+      <div className="flex items-center justify-between">
+        {appointment.price && (
+          <span className="text-sm font-medium text-slate-600">
+            €{appointment.price}
+          </span>
+        )}
+        <a
+          href={appointment.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="block text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+        >
+          Book Now →
+        </a>
+      </div>
     </div>
   );
 }

@@ -1,93 +1,46 @@
+#!/usr/bin/env python3
 """
 Main scraper entry point - runs all scrapers and aggregates results
 """
 import asyncio
 import json
+import os
+import sys
 from datetime import datetime
 from typing import List
 
-from scrapers import GoetheScraper, TelcScraper, BamfScraper, BurgeramtScraper
+# Add parent directory to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from scrapers.telc import TelcScraper
+from models import Appointment
 
 
 async def run_all_scrapers() -> List[dict]:
     """Run all scrapers and aggregate results"""
     all_appointments = []
     
-    # Run Goethe scraper
-    print("Running Goethe scraper...")
-    goethe = GoetheScraper()
-    try:
-        results = await goethe.run()
-        for apt in results:
-            all_appointments.append({
-                "source": apt.source,
-                "category": apt.category,
-                "title": apt.title,
-                "location": apt.location,
-                "date": apt.date.isoformat() if apt.date else None,
-                "slots": apt.slots,
-                "link": apt.link,
-                "last_updated": apt.last_updated.isoformat(),
-            })
-    except Exception as e:
-        print(f"Goethe scraper error: {e}")
-    
     # Run Telc scraper
+    print("=" * 50)
     print("Running Telc scraper...")
+    print("=" * 50)
+    
     telc = TelcScraper()
     try:
         results = await telc.run()
         for apt in results:
-            all_appointments.append({
-                "source": apt.source,
-                "category": apt.category,
-                "title": apt.title,
-                "location": apt.location,
-                "date": apt.date.isoformat() if apt.date else None,
-                "slots": apt.slots,
-                "link": apt.link,
-                "last_updated": apt.last_updated.isoformat(),
-            })
+            appointment_data = apt.to_dict()
+            appointment_data['date'] = appointment_data['date'].isoformat() if appointment_data.get('date') else None
+            appointment_data['last_updated'] = appointment_data['last_updated'].isoformat()
+            all_appointments.append(appointment_data)
+        print(f"Found {len(results)} Telc appointments")
     except Exception as e:
         print(f"Telc scraper error: {e}")
     
-    # Run BAMF scraper
-    print("Running BAMF scraper...")
-    bamf = BamfScraper()
-    try:
-        results = await bamf.run()
-        for apt in results:
-            all_appointments.append({
-                "source": apt.source,
-                "category": apt.category,
-                "title": apt.title,
-                "location": apt.location,
-                "date": apt.date.isoformat() if apt.date else None,
-                "slots": apt.slots,
-                "link": apt.link,
-                "last_updated": apt.last_updated.isoformat(),
-            })
-    except Exception as e:
-        print(f"BAMF scraper error: {e}")
-    
-    # Run Bürgeramt scraper
-    print("Running Bürgeramt scraper...")
-    burgeramt = BurgeramtScraper()
-    try:
-        results = await burgeramt.run()
-        for apt in results:
-            all_appointments.append({
-                "source": apt.source,
-                "category": apt.category,
-                "title": apt.title,
-                "location": apt.location,
-                "date": apt.date.isoformat() if apt.date else None,
-                "slots": apt.slots,
-                "link": apt.link,
-                "last_updated": apt.last_updated.isoformat(),
-            })
-    except Exception as e:
-        print(f"Bürgeramt scraper error: {e}")
+    # Add more scrapers here as they're implemented:
+    # - GoetheScraper
+    # - BamfScraper
+    # - BurgeramtScraper
     
     return all_appointments
 
@@ -95,21 +48,32 @@ async def run_all_scrapers() -> List[dict]:
 async def main():
     """Main entry point"""
     print(f"Starting scraper run at {datetime.now()}")
+    print()
     
     appointments = await run_all_scrapers()
     
-    # Save to JSON (in production, this would go to a database)
+    # Save to JSON
     output = {
         "last_updated": datetime.now().isoformat(),
         "count": len(appointments),
         "appointments": appointments,
     }
     
-    with open("appointments.json", "w", encoding="utf-8") as f:
+    # Save to file
+    output_dir = os.path.join(os.path.dirname(__file__), 'data')
+    os.makedirs(output_dir, exist_ok=True)
+    
+    output_file = os.path.join(output_dir, 'appointments.json')
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
     
-    print(f"Scraped {len(appointments)} appointments")
-    print("Results saved to appointments.json")
+    print()
+    print("=" * 50)
+    print(f"Scraped {len(appointments)} appointments total")
+    print(f"Results saved to {output_file}")
+    print("=" * 50)
+    
+    return output
 
 
 if __name__ == "__main__":
