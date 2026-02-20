@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from typing import List
 
-from scrapers.goethe import GoetheScraper
+from scrapers import GoetheScraper, TelcScraper, BamfScraper, BurgeramtScraper
 
 
 async def run_all_scrapers() -> List[dict]:
@@ -32,10 +32,62 @@ async def run_all_scrapers() -> List[dict]:
     except Exception as e:
         print(f"Goethe scraper error: {e}")
     
-    # Add more scrapers here as they're implemented:
-    # - TelcScraper
-    # - BamfScraper
-    # - etc.
+    # Run Telc scraper
+    print("Running Telc scraper...")
+    telc = TelcScraper()
+    try:
+        results = await telc.run()
+        for apt in results:
+            all_appointments.append({
+                "source": apt.source,
+                "category": apt.category,
+                "title": apt.title,
+                "location": apt.location,
+                "date": apt.date.isoformat() if apt.date else None,
+                "slots": apt.slots,
+                "link": apt.link,
+                "last_updated": apt.last_updated.isoformat(),
+            })
+    except Exception as e:
+        print(f"Telc scraper error: {e}")
+    
+    # Run BAMF scraper
+    print("Running BAMF scraper...")
+    bamf = BamfScraper()
+    try:
+        results = await bamf.run()
+        for apt in results:
+            all_appointments.append({
+                "source": apt.source,
+                "category": apt.category,
+                "title": apt.title,
+                "location": apt.location,
+                "date": apt.date.isoformat() if apt.date else None,
+                "slots": apt.slots,
+                "link": apt.link,
+                "last_updated": apt.last_updated.isoformat(),
+            })
+    except Exception as e:
+        print(f"BAMF scraper error: {e}")
+    
+    # Run Bürgeramt scraper
+    print("Running Bürgeramt scraper...")
+    burgeramt = BurgeramtScraper()
+    try:
+        results = await burgeramt.run()
+        for apt in results:
+            all_appointments.append({
+                "source": apt.source,
+                "category": apt.category,
+                "title": apt.title,
+                "location": apt.location,
+                "date": apt.date.isoformat() if apt.date else None,
+                "slots": apt.slots,
+                "link": apt.link,
+                "last_updated": apt.last_updated.isoformat(),
+            })
+    except Exception as e:
+        print(f"Bürgeramt scraper error: {e}")
     
     return all_appointments
 
