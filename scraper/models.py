@@ -13,6 +13,8 @@ class AppointmentCategory(Enum):
     KFZ = "kfz"
     BURGERAMT = "buergeramt"
     AUSLANDERBEHORDE = "auslaenderbehoerde"
+    GESUNDHEIT = "gesundheit"
+    BILDUNG = "bildung"
     OTHER = "other"
 
 

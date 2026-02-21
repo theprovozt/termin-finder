@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { clsx } from "clsx";
 
-// Types
 interface Appointment {
   id: string;
   source: string;
@@ -21,15 +20,17 @@ interface Appointment {
 }
 
 const categories = [
-  { id: "all", name: "All Appointments", icon: "📅" },
-  { id: "language-exam", name: "Language Exams", icon: "📝" },
-  { id: "citizenship", name: "Citizenship", icon: "🇩🇪" },
-  { id: "kfz", name: "KFZ & Vehicles", icon: "🚗" },
+  { id: "all", name: "Alle Termine", icon: "📅" },
+  { id: "language-exam", name: "Sprachprüfungen", icon: "📝" },
+  { id: "citizenship", name: "Einbürgerung", icon: "🇩🇪" },
   { id: "buergeramt", name: "Bürgeramt", icon: "🏛️" },
+  { id: "kfz", name: "KFZ & Führerschein", icon: "🚗" },
+  { id: "gesundheit", name: "Gesundheit", icon: "🏥" },
+  { id: "bildung", name: "Bildung", icon: "🎓" },
 ];
 
 const locations = [
-  { name: "All Germany", lat: 51.1657, lng: 10.4515 },
+  { name: "Ganz Deutschland", lat: 51.1657, lng: 10.4515 },
   { name: "Berlin", lat: 52.52, lng: 13.405 },
   { name: "München", lat: 48.1351, lng: 11.582 },
   { name: "Hamburg", lat: 53.5511, lng: 9.9937 },
@@ -38,14 +39,23 @@ const locations = [
   { name: "Stuttgart", lat: 48.7758, lng: 9.1829 },
   { name: "Düsseldorf", lat: 51.2277, lng: 6.7735 },
   { name: "Dresden", lat: 51.0504, lng: 13.7373 },
+  { name: "Leipzig", lat: 51.3397, lng: 12.3731 },
 ];
 
-// Dynamic import for map (client-side only)
+const categoryIcons: Record<string, string> = {
+  "language-exam": "📝",
+  "citizenship": "🇩🇪",
+  "buergeramt": "🏛️",
+  "kfz": "🚗",
+  "gesundheit": "🏥",
+  "bildung": "🎓",
+};
+
 const MapView = dynamic(() => import("./components/MapView"), {
   ssr: false,
   loading: () => (
     <div className="h-full flex items-center justify-center bg-slate-100 rounded-xl">
-      <p className="text-slate-500">Loading map...</p>
+      <div className="spinner"></div>
     </div>
   ),
 });
@@ -57,9 +67,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
-  // Fetch appointments from API
   useEffect(() => {
     async function fetchAppointments() {
       try {
@@ -99,269 +107,238 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading appointments...</p>
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="loading">
+          <div className="spinner"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[var(--background)]">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2">
-              <span className="text-3xl">📅</span>
-              TerminFinder
-            </h1>
-            <nav className="hidden md:flex gap-6">
-              <a href="#" className="text-slate-600 hover:text-blue-600">
-                How it works
-              </a>
-              <a href="#" className="text-slate-600 hover:text-blue-600">
-                Add Source
-              </a>
-              <a href="#" className="text-slate-600 hover:text-blue-600">
-                About
-              </a>
-            </nav>
-          </div>
+      <header className="header">
+        <div className="header-inner">
+          <a href="/" className="logo">
+            <div className="logo-icon">📅</div>
+            TerminPro
+          </a>
+          <nav className="nav">
+            <a href="#" className="nav-link">So funktioniert's</a>
+            <a href="#" className="nav-link">Alle Kategorien</a>
+            <a href="#" className="nav-link">Über uns</a>
+            <a href="#" className="nav-cta">Termin hinzufügen</a>
+          </nav>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="bg-gradient-to-b from-blue-600 to-blue-700 text-white py-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            German Appointments,<br />
-            <span className="text-blue-200">All in One Place</span>
-          </h2>
-          <p className="text-lg text-blue-100 mb-6">
-            Find and book appointments for language exams, citizenship tests, and more
+      <section className="hero">
+        <div className="hero-content">
+          <div className="hero-badge">
+            <span className="hero-badge-dot"></span>
+            Deutschlands größte Termin-Suchmaschine
+          </div>
+          <h1>
+            Finde deinen <span className="text-gradient">Termin</span>
+            <br />in ganz Deutschland
+          </h1>
+          <p className="hero-subtitle">
+            Sprachprüfungen, Einbürgerungstests, Bürgeramt-Termine und mehr — 
+            alles an einem Ort.
           </p>
 
           {/* Search */}
-          <div className="bg-white rounded-lg p-2 shadow-xl flex flex-col md:flex-row gap-2 max-w-2xl mx-auto">
-            <input
-              type="text"
-              placeholder="What appointment do you need?"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-md text-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="px-4 py-3 rounded-md text-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">All locations</option>
-              {locations.slice(1).map((loc) => (
-                <option key={loc.name} value={loc.name}>
-                  {loc.name}
-                </option>
-              ))}
-            </select>
-            <button className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-md font-semibold transition-colors">
-              Search
-            </button>
+          <div className="search-container">
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="Wonach suchst du? (z.B. Goethe B1, Einbürgerungstest...)"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="search-input"
+              />
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="search-select"
+              >
+                <option value="">Alle Städte</option>
+                {locations.slice(1).map((loc) => (
+                  <option key={loc.name} value={loc.name}>
+                    {loc.name}
+                  </option>
+                ))}
+              </select>
+              <button className="search-btn">Suchen</button>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Categories & View Toggle */}
-      <section className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Categories */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={clsx(
-                  "flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors",
-                  selectedCategory === cat.id
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-                )}
-              >
-                <span>{cat.icon}</span>
-                {cat.name}
-              </button>
-            ))}
-          </div>
-
-          {/* View Toggle */}
-          <div className="flex bg-white rounded-lg p-1 border border-slate-200">
+      {/* Categories */}
+      <section className="categories">
+        <div className="categories-header">
+          <h2>Nach Kategorie suchen</h2>
+          <p>Wähle eine Kategorie, um verfügbare Termine zu finden</p>
+        </div>
+        <div className="categories-grid">
+          {categories.map((cat) => (
             <button
-              onClick={() => setViewMode("list")}
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
               className={clsx(
-                "px-4 py-2 rounded-md flex items-center gap-2 transition-colors",
-                viewMode === "list"
-                  ? "bg-blue-100 text-blue-700"
-                  : "text-slate-600 hover:bg-slate-100"
+                "category-card",
+                selectedCategory === cat.id && "active"
               )}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-              List
+              <div className="category-icon">{cat.icon}</div>
+              <div className="category-name">{cat.name}</div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Results */}
+      <section className="results">
+        <div className="results-header">
+          <h3 className="results-count">
+            {filteredAppointments.length} <span>Termine gefunden</span>
+          </h3>
+          <div className="view-toggle">
+            <button
+              onClick={() => setViewMode("list")}
+              className={clsx("view-btn", viewMode === "list" && "active")}
+            >
+              Liste
             </button>
             <button
               onClick={() => setViewMode("map")}
-              className={clsx(
-                "px-4 py-2 rounded-md flex items-center gap-2 transition-colors",
-                viewMode === "map"
-                  ? "bg-blue-100 text-blue-700"
-                  : "text-slate-600 hover:bg-slate-100"
-              )}
+              className={clsx("view-btn", viewMode === "map" && "active")}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              Map
+              Karte
             </button>
           </div>
         </div>
-      </section>
-
-      {/* Main Content */}
-      <section className="max-w-7xl mx-auto px-4 pb-12">
-        {/* Results count */}
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold text-slate-800">
-            {selectedCategory === "all"
-              ? "All Appointments"
-              : categories.find((c) => c.id === selectedCategory)?.name}
-            <span className="text-slate-400 font-normal ml-2">
-              ({filteredAppointments.length} found)
-            </span>
-          </h3>
-        </div>
 
         {viewMode === "map" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Map */}
-            <div className="lg:col-span-2 h-[500px] rounded-xl overflow-hidden border border-slate-200">
+          <div className="results-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "32px" }}>
+            <div className="map-container">
               <MapView
                 appointments={filteredAppointments}
                 center={getCenter()}
-                onMarkerClick={setSelectedAppointment}
               />
             </div>
-
-            {/* Sidebar List */}
-            <div className="space-y-4 max-h-[500px] overflow-y-auto">
-              {filteredAppointments.map((apt) => (
-                <AppointmentCard
-                  key={apt.id}
-                  appointment={apt}
-                  isSelected={selectedAppointment?.id === apt.id}
-                  onClick={() => setSelectedAppointment(apt)}
-                />
+            <div className="space-y-4">
+              {filteredAppointments.slice(0, 10).map((apt) => (
+                <ResultCard key={apt.id} appointment={apt} />
               ))}
             </div>
           </div>
-        ) : (
-          /* List View */
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredAppointments.map((apt) => (
-              <AppointmentCard
-                key={apt.id}
-                appointment={apt}
-                onClick={() => setSelectedAppointment(apt)}
-              />
-            ))}
-          </div>
-        )}
-
-        {filteredAppointments.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
-            <p className="text-slate-500 text-lg">
-              No appointments found. Try a different search or category.
+        ) : filteredAppointments.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">🔍</div>
+            <h3 className="empty-title">Keine Termine gefunden</h3>
+            <p className="empty-text">
+              Versuche es mit anderen Suchbegriffen oder einer anderen Kategorie.
             </p>
+          </div>
+        ) : (
+          <div className="results-grid">
+            {filteredAppointments.map((apt) => (
+              <ResultCard key={apt.id} appointment={apt} />
+            ))}
           </div>
         )}
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-800 text-slate-400 py-8 mt-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p>© 2026 TerminFinder. Made in Germany 🇩🇪</p>
-          <p className="text-sm mt-2">
-            We aggregate public appointment information. Always verify details on official sites.
-          </p>
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-grid">
+            <div className="footer-brand">
+              <div className="footer-logo">
+                <span>📅</span> TerminPro
+              </div>
+              <p className="footer-desc">
+                Die größte Suchmaschine für Termine in Deutschland. 
+                Finde schnell und einfach deinen nächsten Termin.
+              </p>
+            </div>
+            <div className="footer-col">
+              <h4>Kategorien</h4>
+              <ul className="footer-links">
+                <li><a href="#">Sprachprüfungen</a></li>
+                <li><a href="#">Einbürgerung</a></li>
+                <li><a href="#">Bürgeramt</a></li>
+                <li><a href="#">KFZ & Führerschein</a></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>Städte</h4>
+              <ul className="footer-links">
+                <li><a href="#">Berlin</a></li>
+                <li><a href="#">München</a></li>
+                <li><a href="#">Hamburg</a></li>
+                <li><a href="#">Frankfurt</a></li>
+              </ul>
+            </div>
+            <div className="footer-col">
+              <h4>Unternehmen</h4>
+              <ul className="footer-links">
+                <li><a href="#">Über uns</a></li>
+                <li><a href="#">Kontakt</a></li>
+                <li><a href="#">Datenschutz</a></li>
+                <li><a href="#">Impressum</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>© 2026 TerminPro. Made in Germany 🇩🇪</p>
+            <p>Wir aggregieren öffentliche Termindaten. Bitte überprüfe alle Angaben auf den offiziellen Seiten.</p>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
 
-// Appointment Card Component
-function AppointmentCard({
-  appointment,
-  onClick,
-  isSelected,
-}: {
-  appointment: Appointment;
-  onClick?: () => void;
-  isSelected?: boolean;
-}) {
+function ResultCard({ appointment }: { appointment: Appointment }) {
+  const icon = categoryIcons[appointment.category] || "📅";
+  
   return (
-    <div
-      onClick={onClick}
-      className={`bg-white rounded-xl border p-5 hover:shadow-lg transition-all cursor-pointer ${
-        isSelected ? "border-blue-500 ring-2 ring-blue-100" : "border-slate-200"
-      }`}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded">
+    <div className="result-card">
+      <div className="result-image">{icon}</div>
+      <div className="result-content">
+        <span className="result-source">
           {appointment.source}
         </span>
-        <span
-          className={`text-xs font-semibold px-2 py-1 rounded ${
-            appointment.slots_available > 5
-              ? "bg-green-100 text-green-700"
-              : appointment.slots_available > 0
-              ? "bg-yellow-100 text-yellow-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {appointment.slots_available} slots
-        </span>
-      </div>
-
-      <h4 className="font-semibold text-slate-800 mb-2">
-        {appointment.title}
-      </h4>
-
-      <div className="flex items-center gap-4 text-sm text-slate-500 mb-4">
-        <span className="flex items-center gap-1">📍 {appointment.location}</span>
-        {appointment.date && (
-          <span className="flex items-center gap-1">
-            📅 {new Date(appointment.date).toLocaleDateString("de-DE")}
+        <h3 className="result-title">{appointment.title}</h3>
+        <div className="result-meta">
+          <span className="result-meta-item">📍 {appointment.location}</span>
+          {appointment.date && (
+            <span className="result-meta-item">
+              📅 {new Date(appointment.date).toLocaleDateString("de-DE")}
+            </span>
+          )}
+          <span className="result-meta-item">
+            {appointment.slots_available > 0 ? `✅ ${appointment.slots_available} Plätze` : "❌ Voll"}
           </span>
-        )}
-      </div>
-
-      <div className="flex items-center justify-between">
-        {appointment.price && (
-          <span className="text-sm font-medium text-slate-600">
-            €{appointment.price}
+        </div>
+        <div className="result-footer">
+          <span className="result-price">
+            {appointment.price ? `€${appointment.price}` : "Kostenlos"}
           </span>
-        )}
-        <a
-          href={appointment.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="block text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-        >
-          Book Now →
-        </a>
+          <a
+            href={appointment.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="result-btn"
+          >
+            Buchen →
+          </a>
+        </div>
       </div>
     </div>
   );

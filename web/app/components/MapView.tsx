@@ -20,7 +20,7 @@ interface Appointment {
 interface MapViewProps {
   appointments: Appointment[];
   center: [number, number];
-  onMarkerClick: (appointment: Appointment | null) => void;
+  onMarkerClick?: (appointment: Appointment | null) => void;
 }
 
 export default function MapView({ appointments, center, onMarkerClick }: MapViewProps) {
@@ -110,7 +110,7 @@ export default function MapView({ appointments, center, onMarkerClick }: MapView
         </div>
       `);
 
-      marker.on("click", () => onMarkerClick(apt));
+      marker.on("click", () => onMarkerClick && onMarkerClick(apt));
     });
   }, [appointments, onMarkerClick]);
 
