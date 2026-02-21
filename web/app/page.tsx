@@ -27,6 +27,8 @@ const categories = [
   { id: "kfz", name: "KFZ & Führerschein", icon: "🚗" },
   { id: "gesundheit", name: "Gesundheit", icon: "🏥" },
   { id: "bildung", name: "Bildung", icon: "🎓" },
+  { id: "jobcenter", name: "Jobcenter", icon: "💼" },
+  { id: "finanzamt", name: "Finanzamt", icon: "💰" },
 ];
 
 const locations = [
@@ -40,6 +42,26 @@ const locations = [
   { name: "Düsseldorf", lat: 51.2277, lng: 6.7735 },
   { name: "Dresden", lat: 51.0504, lng: 13.7373 },
   { name: "Leipzig", lat: 51.3397, lng: 12.3731 },
+  { name: "Nürnberg", lat: 49.4521, lng: 11.0767 },
+  { name: "Hannover", lat: 52.3759, lng: 9.732 },
+  { name: "Bremen", lat: 53.0793, lng: 8.8017 },
+  { name: "Duisburg", lat: 51.4344, lng: 6.7623 },
+  { name: "Dortmund", lat: 51.5136, lng: 7.4653 },
+  { name: "Essen", lat: 51.4556, lng: 7.0116 },
+  { name: "Bonn", lat: 50.7374, lng: 7.0982 },
+  { name: "Münster", lat: 51.9607, lng: 7.6261 },
+  { name: "Karlsruhe", lat: 49.0069, lng: 8.4037 },
+  { name: "Mannheim", lat: 49.4875, lng: 8.4660 },
+  { name: "Augsburg", lat: 48.3705, lng: 10.8978 },
+  { name: "Wiesbaden", lat: 50.0826, lng: 8.2400 },
+  { name: "Bielefeld", lat: 52.0302, lng: 8.5325 },
+  { name: "Freiburg", lat: 47.9990, lng: 7.8421 },
+  { name: "Lübeck", lat: 53.8655, lng: 10.6866 },
+  { name: "Kiel", lat: 54.3233, lng: 10.1228 },
+  { name: "Aachen", lat: 50.7753, lng: 6.0839 },
+  { name: "Halle", lat: 51.4825, lng: 11.9697 },
+  { name: "Magdeburg", lat: 52.1205, lng: 11.6276 },
+  { name: "Heidelberg", lat: 49.3988, lng: 8.6724 },
 ];
 
 const categoryIcons: Record<string, string> = {
@@ -49,6 +71,8 @@ const categoryIcons: Record<string, string> = {
   "kfz": "🚗",
   "gesundheit": "🏥",
   "bildung": "🎓",
+  "jobcenter": "💼",
+  "finanzamt": "💰",
 };
 
 const MapView = dynamic(() => import("./components/MapView"), {
