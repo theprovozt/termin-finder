@@ -1,0 +1,5 @@
+# Supabase local temp state
+supabase/.temp/
+
+# Env
+web/.env.local
